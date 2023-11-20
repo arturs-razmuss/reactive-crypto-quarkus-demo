@@ -10,8 +10,6 @@
     <packaging>pom</packaging>
     <modules>
         <module>price-capture</module>
-        <module>price-aggregator</module>
-        <module>price-display</module>
     </modules>
 
     <properties>
@@ -25,6 +23,13 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>confluent</id>
+            <url>https://packages.confluent.io/maven/</url>
+        </repository>
+    </repositories>
 
     <dependencyManagement>
         <dependencies>

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.arpc.crypto.price.entity";
+
+package orderbook;
+
+message OrderBookUpdate {
+    int64 update_id = 1;
+    string symbol = 2;
+    double best_bid_price = 3;
+    double best_bid_qty = 4;
+    double best_ask_price = 5;
+    double best_ask_qty = 6;
+}
