@@ -34,10 +34,6 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-apicurio-registry-avro</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer</artifactId>
         </dependency>
         <dependency>
@@ -48,6 +44,11 @@
             <groupId>io.github.binance</groupId>
             <artifactId>binance-connector-java</artifactId>
             <version>3.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-protobuf-serializer</artifactId>
+            <version>7.5.1</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

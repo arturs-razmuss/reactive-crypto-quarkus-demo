@@ -19,7 +19,7 @@ services:
       - 29092:29092
 
   console:
-    image: docker.redpanda.com/redpandadata/console:latest
+    image: docker.redpanda.com/redpandadata/console:v2.3.5
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
     environment:
@@ -27,9 +27,19 @@ services:
       CONSOLE_CONFIG_FILE: |
         kafka:
           brokers: ["redpanda:29092"]
-          schemaRegistry:
+          protobuf:
             enabled: true
-            urls: ["http://redpanda:8081"]
+            schemaRegistry:
+              enabled: true
+              refreshInterval: 5m
+            mappings:
+              - topicName: raw-price
+                valueProtoType: orderbook.OrderBookUpdate
+            fileSystem:
+              enabled: true
+              refreshInterval: 5m
+              paths:
+                - /etc/protos
         redpanda:
           adminApi:
             enabled: true
@@ -39,8 +49,11 @@ services:
           clusters:
             - name: local-connect-cluster
               url: http://connect:8083
+
     ports:
       - 8088:8080
+    volumes:
+      - ./src/main/proto:/etc/protos
     depends_on:
       - redpanda
 

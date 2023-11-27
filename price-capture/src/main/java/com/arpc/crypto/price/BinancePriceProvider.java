@@ -27,15 +27,18 @@ public class BinancePriceProvider {
     WebSocketStreamClientImpl webSocketStreamClient;
 
     void onStart(@Observes StartupEvent ev) {
-        isProcessing.set(true);
+            isProcessing.set(true);
         webSocketStreamClient = new WebSocketStreamClientImpl();
 
         var connectionId = webSocketStreamClient.bookTicker("BTCUSDT", this::parseAndSend);
 
-
         logger.info("starting up");
+        shutdownSocketWithDelay(connectionId, Duration.ofSeconds(2));
+    }
+
+    private void shutdownSocketWithDelay(int connectionId, Duration delay) {
         Uni.createFrom().item("xxx")
-                .onItem().delayIt().by(Duration.ofSeconds(2))
+                .onItem().delayIt().by(delay)
                 .subscribeAsCompletionStage().thenAccept(it -> {
                     System.out.println("shutting down");
                     webSocketStreamClient.closeConnection(connectionId);
