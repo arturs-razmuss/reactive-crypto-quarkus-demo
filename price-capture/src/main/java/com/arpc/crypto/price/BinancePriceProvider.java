@@ -27,7 +27,7 @@ public class BinancePriceProvider {
     WebSocketStreamClientImpl webSocketStreamClient;
 
     void onStart(@Observes StartupEvent ev) {
-            isProcessing.set(true);
+        isProcessing.set(true);
         webSocketStreamClient = new WebSocketStreamClientImpl();
 
         var connectionId = webSocketStreamClient.bookTicker("BTCUSDT", this::parseAndSend);
@@ -50,6 +50,7 @@ public class BinancePriceProvider {
         try {
             var rootNode = objectMapper.readTree(bookTicker);
             var orderBookUpdateRequest = OrderBookUpdate.newBuilder()
+                    .setSymbol(rootNode.get("s").asText())
                     .setUpdateId(rootNode.get("u").asLong())
                     .setBestBidPrice(rootNode.get("b").asDouble())
                     .setBestBidQty(rootNode.get("B").asDouble())
