@@ -16,8 +16,8 @@ public class Order extends PanacheEntity {
     public double bidPrice;
     public double askPrice;
 
-    public static Uni<List<Order>> findBetween(Instant start, Instant end) {
-        return find("timestamp between ?1 and ?2", start, end).list();
+    public static Uni<List<Order>> findBetween(String symbol, Instant start, Instant end) {
+        return find("symbol = ?1 and timestamp between ?2 and ?3", symbol, start, end).list();
     }
 
 }

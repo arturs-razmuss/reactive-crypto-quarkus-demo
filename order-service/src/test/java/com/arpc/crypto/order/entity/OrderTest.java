@@ -19,17 +19,19 @@ import java.util.stream.Stream;
 @RunOnVertxContext
 class OrderTest {
 
+    public static final String BTCUSDT = "BTCUSDT";
     @Inject
     Mutiny.SessionFactory sessionFactory;
 
     long currentEpochMillis;
     Order initialOrder;
+
     @BeforeEach
     void setUp() {
         sessionFactory.withSession(session -> {
             Order.deleteAll().await().atMost(Duration.ofSeconds(5));
             Order order = new Order();
-            order.symbol = "BTCUSDT";
+            order.symbol = BTCUSDT;
             order.location = "Binance";
             currentEpochMillis = System.currentTimeMillis();
             order.timestamp = Instant.ofEpochMilli(currentEpochMillis);
@@ -43,7 +45,7 @@ class OrderTest {
 
     @Test
     void shouldFindIfTimestampIsInRange(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
+        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
                 .map(List::stream)
                 .map(Stream::findFirst)
                 .map(Optional::orElseThrow), initialOrder);
@@ -51,7 +53,7 @@ class OrderTest {
 
     @Test
     void shouldFindWhenPeriodBeforeTimestamp(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(Instant.ofEpochMilli(currentEpochMillis - 1000), Instant.ofEpochMilli(currentEpochMillis-1))
+        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis - 1000), Instant.ofEpochMilli(currentEpochMillis-1))
                 .map(List::stream)
                 .map(Stream::findFirst)
                 .map(Optional::orElseThrow), initialOrder);
@@ -59,7 +61,7 @@ class OrderTest {
 
     @Test
     void shouldExcludeWhenPeriodAfterTimestamp(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(Instant.ofEpochMilli(currentEpochMillis+1), Instant.ofEpochMilli(currentEpochMillis + 1000))
+        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis+1), Instant.ofEpochMilli(currentEpochMillis + 1000))
                 .map(List::stream)
                 .map(Stream::findFirst)
                 .map(Optional::orElseThrow), initialOrder);
