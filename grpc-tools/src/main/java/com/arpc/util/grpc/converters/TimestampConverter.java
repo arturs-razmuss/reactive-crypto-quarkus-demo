@@ -1,4 +1,4 @@
-package com.arpc.timestamp;
+package com.arpc.util.grpc.converters;
 
 import com.google.protobuf.Timestamp;
 

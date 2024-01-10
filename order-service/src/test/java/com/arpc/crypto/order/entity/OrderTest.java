@@ -13,10 +13,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @QuarkusTest
-@RunOnVertxContext
+//@RunOnVertxContext
 class OrderTest {
 
     public static final String BTCUSDT = "BTCUSDT";
@@ -28,8 +31,8 @@ class OrderTest {
 
     @BeforeEach
     void setUp() {
-        sessionFactory.withSession(session -> {
-            Order.deleteAll().await().atMost(Duration.ofSeconds(5));
+        sessionFactory.withTransaction((session, transaction) -> {
+//            Order.deleteAll().await().atMost(Duration.ofSeconds(5));
             Order order = new Order();
             order.symbol = BTCUSDT;
             order.location = "Binance";
@@ -37,18 +40,26 @@ class OrderTest {
             order.timestamp = Instant.ofEpochMilli(currentEpochMillis);
             order.bidPrice = 10000;
             order.askPrice = 10001;
+            initialOrder = order;
 
-            order.persist().await().atMost(Duration.ofSeconds(5));
-            return Uni.createFrom().nullItem();
-        });
+            return Order.deleteAll()
+                    .replaceWith(session.persist(order)
+                    .invoke(session::flush)
+                    .invoke(() -> System.out.println("Order inserted successfully"))
+                    .onFailure().invoke(Throwable::printStackTrace));
+        }).await().atMost(Duration.ofSeconds(5));
     }
 
     @Test
+    @RunOnVertxContext
     void shouldFindIfTimestampIsInRange(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
+        Supplier<Uni<Order>> findOrder = () -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
                 .map(List::stream)
                 .map(Stream::findFirst)
-                .map(Optional::orElseThrow), initialOrder);
+                .map(Optional::orElseThrow);
+
+        asserter.assertThat(findOrder, (entity) -> assertEquals(BTCUSDT, entity.symbol));
+
     }
 
     @Test

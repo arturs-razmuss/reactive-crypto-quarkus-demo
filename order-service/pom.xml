@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.arpc.crypto</groupId>
+            <artifactId>grpc-tools</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-reactive-panache</artifactId>
         </dependency>

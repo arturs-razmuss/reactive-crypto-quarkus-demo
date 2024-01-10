@@ -10,7 +10,7 @@ import io.quarkus.grpc.GrpcService;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.smallrye.mutiny.Uni;
 
-import static com.arpc.timestamp.TimestampConverter.convertToInstant;
+import static com.arpc.util.grpc.converters.TimestampConverter.convertToInstant;
 
 @GrpcService
 public class OrderService implements OrderBookQueryService {
