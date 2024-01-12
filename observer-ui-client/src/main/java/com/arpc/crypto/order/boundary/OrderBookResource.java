@@ -2,6 +2,7 @@ package com.arpc.crypto.order.boundary;
 
 import com.arpc.crypto.order.OrderBookQueryService;
 import com.arpc.crypto.order.OrderSpreadRequest;
+import com.arpc.util.grpc.converters.TimestampConverter;
 import io.quarkus.grpc.GrpcClient;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
