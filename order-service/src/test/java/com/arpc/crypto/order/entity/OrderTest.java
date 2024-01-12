@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
-//@RunOnVertxContext
 class OrderTest {
 
     public static final String BTCUSDT = "BTCUSDT";
@@ -32,7 +31,6 @@ class OrderTest {
     @BeforeEach
     void setUp() {
         sessionFactory.withTransaction((session, transaction) -> {
-//            Order.deleteAll().await().atMost(Duration.ofSeconds(5));
             Order order = new Order();
             order.symbol = BTCUSDT;
             order.location = "Binance";
@@ -43,38 +41,39 @@ class OrderTest {
             initialOrder = order;
 
             return Order.deleteAll()
-                    .replaceWith(session.persist(order)
-                    .invoke(session::flush)
-                    .invoke(() -> System.out.println("Order inserted successfully"))
-                    .onFailure().invoke(Throwable::printStackTrace));
+                    .replaceWith(
+                            session.persist(order)
+                            .onFailure().invoke(Throwable::printStackTrace));
         }).await().atMost(Duration.ofSeconds(5));
     }
 
     @Test
     @RunOnVertxContext
     void shouldFindIfTimestampIsInRange(TransactionalUniAsserter asserter) {
-        Supplier<Uni<Order>> findOrder = () -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
+        Supplier<Uni<Order>> foundOrder = () -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis), Instant.ofEpochMilli(currentEpochMillis))
                 .map(List::stream)
                 .map(Stream::findFirst)
                 .map(Optional::orElseThrow);
 
-        asserter.assertThat(findOrder, (entity) -> assertEquals(BTCUSDT, entity.symbol));
+        asserter.assertThat(foundOrder, (entity) -> assertEquals(BTCUSDT, entity.symbol));
 
     }
 
+    @RunOnVertxContext
     @Test
-    void shouldFindWhenPeriodBeforeTimestamp(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis - 1000), Instant.ofEpochMilli(currentEpochMillis-1))
+    void shouldExcludeWhenPeriodBeforeTimestamp(TransactionalUniAsserter asserter) {
+        asserter.assertTrue(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis - 1000), Instant.ofEpochMilli(currentEpochMillis-1))
                 .map(List::stream)
                 .map(Stream::findFirst)
-                .map(Optional::orElseThrow), initialOrder);
+                .map(Optional::isEmpty));
     }
 
+    @RunOnVertxContext
     @Test
     void shouldExcludeWhenPeriodAfterTimestamp(TransactionalUniAsserter asserter) {
-        asserter.assertEquals(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis+1), Instant.ofEpochMilli(currentEpochMillis + 1000))
+        asserter.assertTrue(() -> Order.findBetween(BTCUSDT, Instant.ofEpochMilli(currentEpochMillis+1), Instant.ofEpochMilli(currentEpochMillis + 1000))
                 .map(List::stream)
                 .map(Stream::findFirst)
-                .map(Optional::orElseThrow), initialOrder);
+                .map(Optional::isEmpty));
     }
 }
