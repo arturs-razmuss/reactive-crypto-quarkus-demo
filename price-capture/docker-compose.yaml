@@ -9,11 +9,11 @@ services:
       - --node-id 0
       - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
       - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
-      - --pandaproxy-addr 0.0.0.0:8082
-      - --advertise-pandaproxy-addr localhost:8082
+      - --pandaproxy-addr 0.0.0.0:10082
+      - --advertise-pandaproxy-addr localhost:10082
     ports:
-      - 8081:8081
-      - 8082:8082
+      - 10081:8081
+      - 10082:8082
       - 9092:9092
       - 9644:9644
       - 29092:29092
@@ -46,7 +46,7 @@ services:
               url: http://connect:8083
 
     ports:
-      - 8088:8080
+      - 10088:8080
     depends_on:
       - redpanda
 
