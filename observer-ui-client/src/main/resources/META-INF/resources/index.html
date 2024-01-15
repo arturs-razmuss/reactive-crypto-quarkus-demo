@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data Example</title>
+</head>
+<body>
+<div id="data-container">Loading data...</div>
+
+<script>
+    function fetchData() {
+      fetch('http://localhost:8080/hello')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const displayData = `
+            <p>Symbol: ${data.symbol}</p>
+            <p>Best Bid Price: ${data.best_bid_price}</p>
+            <p>Best Ask Price: ${data.best_ask_price}</p>
+          `;
+          document.getElementById('data-container').innerHTML = displayData;
+        })
+        .catch(error => {
+          console.error('There has been a problem with your fetch operation:', error);
+          document.getElementById('data-container').innerHTML = 'Error loading historic data.';
+        });
+    }
+    window.onload = fetchData;
+</script>
+</body>
+</html>

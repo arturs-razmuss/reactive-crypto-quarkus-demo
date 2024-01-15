@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.function.Supplier;
 
-import static com.arpc.timestamp.TimestampConverter.convertToTimestamp;
+import static com.arpc.util.grpc.converters.TimestampConverter.convertToTimestamp;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
