@@ -33,7 +33,7 @@ public class BinancePriceProvider {
         var connectionId = webSocketStreamClient.bookTicker("BTCUSDT", this::parseAndSend);
 
         logger.info("starting up");
-        shutdownSocketWithDelay(connectionId, Duration.ofSeconds(2));
+        shutdownSocketWithDelay(connectionId, Duration.ofSeconds(60));
     }
 
     private void shutdownSocketWithDelay(int connectionId, Duration delay) {

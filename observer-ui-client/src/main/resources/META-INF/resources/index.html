@@ -6,11 +6,14 @@
     <title>Fetch Data Example</title>
 </head>
 <body>
-<div id="data-container">Loading data...</div>
+<h1>Historic data</h1>
+<div id="historic-container">Loading data...</div>
+<h2>Live data</h2>
+<div id="live-container">Loading data...</div>
 
 <script>
     function fetchData() {
-      fetch('http://localhost:8080/hello')
+      fetch('http://localhost:8080/crypto/BTCUSDT')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok ' + response.statusText);
@@ -20,17 +23,40 @@
         .then(data => {
           const displayData = `
             <p>Symbol: ${data.symbol}</p>
-            <p>Best Bid Price: ${data.best_bid_price}</p>
-            <p>Best Ask Price: ${data.best_ask_price}</p>
+            <p>Best Bid Price: ${data.bestBidPrice}</p>
+            <p>Best Ask Price: ${data.bestAskPrice}</p>
           `;
-          document.getElementById('data-container').innerHTML = displayData;
+          document.getElementById('historic-container').innerHTML = displayData;
         })
         .catch(error => {
           console.error('There has been a problem with your fetch operation:', error);
-          document.getElementById('data-container').innerHTML = 'Error loading historic data.';
+          document.getElementById('historic-container').innerHTML = 'Error loading historic data.';
         });
     }
-    window.onload = fetchData;
+    window.onload = function() {
+        fetchData();
+        setupServerEvents();
+    }
+
+    function setupServerEvents() {
+     var source = new EventSource('http://localhost:8080/crypto/BTCUSDT/sse');
+
+     source.onmessage = function(event) {
+       var data = JSON.parse(event.data);
+       var displayData = `
+         <p>Symbol: ${data.symbol}</p>
+         <p>Best Bid Price: ${data.bestBidPrice}</p>
+         <p>Best Ask Price: ${data.bestAskPrice}</p>
+       `;
+       document.getElementById('live-container').innerHTML = displayData;
+     };
+
+     source.onerror = function(error) {
+       console.error('Error occurred:', error);
+       document.getElementById('live-container').innerHTML = 'Error loading live data.';
+     };
+    };
+
 </script>
 </body>
 </html>

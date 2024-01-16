@@ -7,8 +7,8 @@ package orderservice;
 import "google/protobuf/timestamp.proto";
 
 service OrderBookQueryService {
-  // Sends a greeting
   rpc GetBestPrices(OrderSpreadRequest) returns (OrderSpreadResponse) {}
+  rpc GetPriceStream(SymbolRequest) returns (stream OrderSpreadResponse) {}
 }
 
 message OrderSpreadRequest {
@@ -21,5 +21,9 @@ message OrderSpreadResponse {
   string symbol = 1;
   double best_bid_price = 2;
   double best_ask_price = 3;
+}
+
+message SymbolRequest {
+  string symbol = 1;
 }
 

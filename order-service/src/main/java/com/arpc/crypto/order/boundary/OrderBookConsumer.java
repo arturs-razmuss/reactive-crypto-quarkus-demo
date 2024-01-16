@@ -6,8 +6,12 @@ import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +22,17 @@ import java.time.Instant;
 public class OrderBookConsumer {
     final Logger logger = LoggerFactory.getLogger(OrderBookConsumer.class);
 
+    @Inject
+    @Channel("prices-in-memory")
+    @OnOverflow(OnOverflow.Strategy.DROP)
+    Emitter<Order> orderEmitter;
+
     @Incoming("orders")
     @WithSession
     @WithTransaction
     public Uni<?> receive(ConsumerRecord<Long,OrderBookUpdate> orderUpdateRecord) {
         Order orderToSave = convertToOrder(orderUpdateRecord);
-
+        orderEmitter.send(orderToSave);
         return orderToSave.persist()
                 .onItem().invoke((savedOrder) -> {
             var order = (Order)savedOrder;
