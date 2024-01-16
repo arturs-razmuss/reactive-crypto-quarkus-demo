@@ -23,7 +23,7 @@ public class OrderService implements OrderBookQueryService {
 
     @Inject
     @Channel("prices-in-memory")
-    Multi<Order> orders;
+    Multi<Order> incomingOrders;
 
     @WithSession
     @Override
@@ -43,7 +43,7 @@ public class OrderService implements OrderBookQueryService {
 
     @Override
     public Multi<OrderSpreadResponse> getPriceStream(SymbolRequest request) {
-        return orders.filter(order -> order.symbol.equals(request.getSymbol()))
+        return incomingOrders.filter(order -> order.symbol.equals(request.getSymbol()))
                 .map(order -> OrderSpreadResponse.newBuilder()
                         .setSymbol(order.symbol)
                         .setBestAskPrice(order.askPrice)
