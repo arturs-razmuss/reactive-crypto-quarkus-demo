@@ -19,7 +19,7 @@ import static com.arpc.util.grpc.converters.TimestampConverter.convertToInstant;
 
 @GrpcService
 @Singleton
-public class OrderService implements OrderBookQueryService {
+public class OrderGrpcService implements OrderBookQueryService {
 
     @Inject
     @Channel("prices-in-memory")

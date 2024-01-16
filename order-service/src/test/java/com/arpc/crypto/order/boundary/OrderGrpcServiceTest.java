@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @RunOnVertxContext
-class OrderServiceTest {
+class OrderGrpcServiceTest {
 
     @GrpcClient
     OrderBookQueryService orderBookQueryService;
