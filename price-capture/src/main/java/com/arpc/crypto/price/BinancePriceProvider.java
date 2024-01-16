@@ -3,6 +3,8 @@ package com.arpc.crypto.price;
 import com.arpc.crypto.price.entity.OrderBookUpdate;
 import com.binance.connector.client.impl.WebSocketStreamClientImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
@@ -24,19 +26,25 @@ public class BinancePriceProvider {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    MeterRegistry registry;
     @ConfigProperty(name = "arpc.binance.ticker-duration-seconds", defaultValue = "60")
     long tickerDurationSeconds;
 
     final AtomicBoolean isProcessing = new AtomicBoolean(false);
     WebSocketStreamClientImpl webSocketStreamClient;
 
+    Counter receivedCounter;
+
     void onStart(@Observes StartupEvent ev) {
+        receivedCounter = registry.counter("orderupdate.received", "source", "binance", "symbol", "BTCUSDT");
+
         isProcessing.set(true);
         webSocketStreamClient = new WebSocketStreamClientImpl();
 
         var connectionId = webSocketStreamClient.bookTicker("BTCUSDT", this::parseAndSend);
 
-        logger.info("starting up");
+        logger.info("Binance capture starting");
         shutdownSocketWithDelay(connectionId, Duration.ofSeconds(tickerDurationSeconds));
     }
 
@@ -51,6 +59,7 @@ public class BinancePriceProvider {
     }
 
     void parseAndSend(String bookTicker) {
+        receivedCounter.increment();
         try {
             var rootNode = objectMapper.readTree(bookTicker);
             var orderBookUpdateRequest = OrderBookUpdate.newBuilder()
