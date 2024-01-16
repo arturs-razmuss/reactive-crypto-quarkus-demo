@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
@@ -23,6 +24,9 @@ public class BinancePriceProvider {
     @Inject
     ObjectMapper objectMapper;
 
+    @ConfigProperty(name = "arpc.binance.ticker-duration-seconds", defaultValue = "60")
+    long tickerDurationSeconds;
+
     final AtomicBoolean isProcessing = new AtomicBoolean(false);
     WebSocketStreamClientImpl webSocketStreamClient;
 
@@ -33,7 +37,7 @@ public class BinancePriceProvider {
         var connectionId = webSocketStreamClient.bookTicker("BTCUSDT", this::parseAndSend);
 
         logger.info("starting up");
-        shutdownSocketWithDelay(connectionId, Duration.ofSeconds(60));
+        shutdownSocketWithDelay(connectionId, Duration.ofSeconds(tickerDurationSeconds));
     }
 
     private void shutdownSocketWithDelay(int connectionId, Duration delay) {

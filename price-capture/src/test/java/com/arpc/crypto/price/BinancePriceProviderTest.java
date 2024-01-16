@@ -17,6 +17,6 @@ class BinancePriceProviderTest {
     @Test
     void onStart() {
         await().atMost(3, TimeUnit.SECONDS).until(() -> binancePriceProvider.isProcessing());
-        await().atMost(5, TimeUnit.SECONDS).until(() -> !binancePriceProvider.isProcessing());
+        await().atMost(3, TimeUnit.SECONDS).until(() -> !binancePriceProvider.isProcessing());
     }
 }
