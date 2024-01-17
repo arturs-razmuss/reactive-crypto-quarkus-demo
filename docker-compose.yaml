@@ -1,0 +1,124 @@
+version: '3.7'
+services:
+  db:
+    container_name: postgres
+    image: postgres:15.2-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: db
+    ports:
+      - 5432:5432
+#    volumes:
+#      - ./db-postgres/db:/var/lib/postgresql/data
+#      - ./db-postgres/import:/import
+    networks:
+      - crypto
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v22.2.2
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://redpanda:29092
+      - --pandaproxy-addr 0.0.0.0:10082
+      - --advertise-pandaproxy-addr localhost:10082
+      - --mode dev-container
+    ports:
+      - 10081:8081
+      - 10082:8082
+      - 9092:9092
+      - 9644:9644
+      - 29092:29092
+    networks:
+      - crypto
+
+  console:
+    image: docker.redpanda.com/redpandadata/console:v2.3.5
+    entrypoint: /bin/sh
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:29092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda:8081"]
+          protobuf:
+            enabled: true
+            schemaRegistry:
+              enabled: true
+              refreshInterval: 5m
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+        connect:
+          enabled: true
+          clusters:
+            - name: local-connect-cluster
+              url: http://connect:8083
+
+    ports:
+      - 10088:8080
+    depends_on:
+      - redpanda
+    networks:
+      - crypto
+
+  order-service:
+    image: artur/order-service:1.0-SNAPSHOT
+    restart: unless-stopped
+    environment:
+      QUARKUS_DATASOURCE_REACTIVE_URL: postgresql://db:5432/db
+      "quarkus.hibernate-orm.database.generation": update
+      QUARKUS_DATASOURCE_USERNAME: app
+      QUARKUS_DATASOURCE_PASSWORD: app
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      "mp.messaging.connector.smallrye-kafka.schema.registry.url": http://redpanda:8081
+    ports:
+      - "8081:8081"
+      - "9001:9001"
+    depends_on:
+      - redpanda
+      - db
+    networks:
+      - crypto
+
+  observer-ui-client:
+    image: artur/observer-ui-client:1.0-SNAPSHOT
+    restart: unless-stopped
+    environment:
+      "quarkus.grpc.clients.orderBookQueryService.host": order-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - order-service
+    networks:
+      - crypto
+  price-capture:
+    image: artur/price-capture:1.0-SNAPSHOT
+    restart: unless-stopped
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/db
+      QUARKUS_DATASOURCE_USERNAME: app
+      QUARKUS_DATASOURCE_PASSWORD: app
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      "mp.messaging.connector.smallrye-kafka.schema.registry.url": http://redpanda:8081
+    ports:
+      - "8082:8082"
+    depends_on:
+      - redpanda
+    networks:
+      - crypto
+
+
+networks:
+  crypto:
+    name: reactive-crypto-network
+    driver: bridge

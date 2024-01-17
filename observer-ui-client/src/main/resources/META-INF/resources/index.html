@@ -13,7 +13,7 @@
 
 <script>
     function fetchData() {
-      fetch('http://localhost:8080/orders/BTCUSDT')
+      fetch('/orders/BTCUSDT')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok ' + response.statusText);
@@ -35,7 +35,7 @@
     }
 
     function setupServerEvents() {
-     var source = new EventSource('http://localhost:8080/orders/BTCUSDT/sse');
+     var source = new EventSource(/orders/BTCUSDT/sse');
 
      source.onmessage = function(event) {
        var data = JSON.parse(event.data);

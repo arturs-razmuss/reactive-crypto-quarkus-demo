@@ -40,3 +40,4 @@ build/
 
 ### Quarkus ###
 .quarkus/
+/db-postgres/
