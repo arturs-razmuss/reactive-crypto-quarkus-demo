@@ -35,7 +35,7 @@
     }
 
     function setupServerEvents() {
-     var source = new EventSource(/orders/BTCUSDT/sse');
+     var source = new EventSource('/orders/BTCUSDT/sse');
 
      source.onmessage = function(event) {
        var data = JSON.parse(event.data);
