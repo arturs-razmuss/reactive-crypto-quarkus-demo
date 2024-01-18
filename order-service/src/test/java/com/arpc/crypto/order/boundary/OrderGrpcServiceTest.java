@@ -37,8 +37,8 @@ class OrderGrpcServiceTest {
         order.symbol = "BTCUSDT";
         order.location = "Binance";
         order.timestamp = Instant.now();
-        order.bidPrice = 6;
-        order.askPrice = 5;
+        order.bidPrice = 5;
+        order.askPrice = 6;
         setupComplete = sessionFactory.withTransaction(session -> {
             return Order.deleteAll()
                     .onItem().ignore().andSwitchTo(order.persist());
@@ -47,7 +47,7 @@ class OrderGrpcServiceTest {
 
     @Test
     void getBestPrices(UniAsserter asserter) {
-        Supplier<Uni<OrderSpreadResponse>> testResultUni = () -> setupComplete.log().onItem().ignore().andSwitchTo(() -> {
+        Supplier<Uni<OrderSpreadResponse>> testResultUni = () -> setupComplete.onItem().ignore().andSwitchTo(() -> {
                     OrderSpreadRequest request = OrderSpreadRequest.newBuilder()
                             .setSymbol("BTCUSDT")
                             .setStartTimestamp(convertToTimestamp(Instant.now().minusSeconds(60)))
@@ -59,8 +59,8 @@ class OrderGrpcServiceTest {
         );
         asserter.assertThat(testResultUni, result -> {
             assertEquals("BTCUSDT", result.getSymbol());
-            assertEquals(5, result.getBestAskPrice());
-            assertEquals(6, result.getBestBidPrice());
+            assertEquals(6, result.getBestAskPrice());
+            assertEquals(5, result.getBestBidPrice());
         });
     }
 }

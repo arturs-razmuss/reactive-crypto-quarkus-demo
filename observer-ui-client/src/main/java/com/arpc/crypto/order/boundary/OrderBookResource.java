@@ -16,6 +16,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Path("/orders")
@@ -30,7 +31,7 @@ public class OrderBookResource {
     public Uni<PriceResponse> getBestPriceWithinPeriod(@PathParam("symbol") String symbol,
                                                        @QueryParam("start") Instant start,
                                                        @QueryParam("end") Instant end) {
-        var startTimestamp = TimestampConverter.convertToTimestamp(Optional.ofNullable(start).orElse(Instant.now().minusSeconds(3600)));
+        var startTimestamp = TimestampConverter.convertToTimestamp(Optional.ofNullable(start).orElse(Instant.now().minus(24, ChronoUnit.HOURS)));
         var endTimestamp = TimestampConverter.convertToTimestamp(Optional.ofNullable(end).orElse(Instant.now()));
         return orderBookQueryService.getBestPrices(OrderSpreadRequest.newBuilder()
                         .setSymbol(symbol)

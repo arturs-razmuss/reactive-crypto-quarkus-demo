@@ -15,6 +15,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
+import java.util.Optional;
+
 import static com.arpc.util.grpc.converters.TimestampConverter.convertToInstant;
 
 @GrpcService
@@ -28,15 +30,15 @@ public class OrderGrpcService implements OrderBookQueryService {
     @WithSession
     @Override
     public Uni<OrderSpreadResponse> getBestPrices(OrderSpreadRequest request) {
-        return Order.findBetween(request.getSymbol(), convertToInstant(request.getStartTimestamp()), convertToInstant(request.getEndTimestamp()))
-                .map(orders -> {
-                    if (orders.isEmpty()) {
+        return Order.findMaxSpreadBetween(request.getSymbol(), convertToInstant(request.getStartTimestamp()), convertToInstant(request.getEndTimestamp()))
+                .map(orderDto -> {
+                    if (orderDto == null) {
                         throw new StatusRuntimeException(Status.NOT_FOUND.withDescription("No orders found"));
                     }
                     return OrderSpreadResponse.newBuilder()
-                            .setSymbol(orders.stream().map(order -> order.symbol).findAny().orElse(""))
-                            .setBestAskPrice(orders.stream().mapToDouble(order -> order.askPrice).max().orElse(0))
-                            .setBestBidPrice(orders.stream().mapToDouble(order -> order.bidPrice).min().orElse(0))
+                            .setSymbol(Optional.of(orderDto.symbol()).orElse("N/A"))
+                            .setBestAskPrice(Optional.of(orderDto.maxAskPrice()).orElse(0.0))
+                            .setBestBidPrice(Optional.of(orderDto.minBidPrice()).orElse(0.0))
                             .build();
                 });
     }
