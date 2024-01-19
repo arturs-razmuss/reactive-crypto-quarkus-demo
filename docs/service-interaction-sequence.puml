@@ -1,0 +1,36 @@
+@startuml
+actor user
+participant "observer-ui-client" as C
+participant "order-service" as O
+queue "kafka" as K
+database "postgres" as DB
+participant "price-capture" as P
+
+== receiving price data from Binance ==
+P <- binance: receive price updates via websocket
+P -> K: publish OrderBookUpdate protobuf to kafka
+K -> O: receive OrderBookUpdate from kafka
+O -> DB: save Order to database
+
+== User requests max order spread ==
+user -> C: HTTP GET /orders/BTCUSDT
+activate C
+C -> O: gRPC GetOrdersRequest
+O -> DB: find Order with max spread
+DB --> O
+O --> C: OrderSpreadResponse
+C -> user: OK application/json
+
+deactivate C
+
+== User requests stream of price updates ==
+user -> C: HTTP GET /orders/BTCUSDT/sse
+activate C
+C -> O: gRPC GetPriceStream
+loop Streaming Data
+K --> O: stream OrderBookUpdate from kafka
+end
+O --> C: stream OrderSpreadResponse
+C --> user: OK text/event-stream
+
+@enduml
