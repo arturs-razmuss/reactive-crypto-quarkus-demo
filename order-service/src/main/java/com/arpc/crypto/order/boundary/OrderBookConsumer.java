@@ -2,12 +2,15 @@ package com.arpc.crypto.order.boundary;
 
 import com.arpc.crypto.order.entity.Order;
 import com.arpc.crypto.price.entity.OrderBookUpdate;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -30,15 +33,23 @@ public class OrderBookConsumer {
     @Incoming("orders")
     @WithSession
     @WithTransaction
-    public Uni<?> receive(ConsumerRecord<Long,OrderBookUpdate> orderUpdateRecord) {
-        Order orderToSave = convertToOrder(orderUpdateRecord);
+    public Uni<?> receive(ConsumerRecords<Long, OrderBookUpdate> orderUpdateRecords) {
+        return Uni.createFrom().item(orderUpdateRecords)
+                .onItem().transformToMulti(records -> Multi.createFrom().iterable(records))
+                .onItem().transformToUniAndMerge(this::save)
+                .collect().asList();
+    }
+
+    private Uni<PanacheEntityBase> save(ConsumerRecord<Long, OrderBookUpdate> record) {
+        Order orderToSave = convertToOrder(record);
         orderEmitter.send(orderToSave);
         return orderToSave.persist()
                 .onItem().invoke((savedOrder) -> {
-            var order = (Order)savedOrder;
-            logger.info("Saving crypto: {} {}", order.askPrice, order.bidPrice);
-        });
+                    var order = (Order) savedOrder;
+//                    logger.info("Saving crypto: {} {}", order.askPrice, order.bidPrice);
+                });
     }
+
 
     @NotNull
     private static Order convertToOrder(ConsumerRecord<Long, OrderBookUpdate> orderUpdateRecord) {

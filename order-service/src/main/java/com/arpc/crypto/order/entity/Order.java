@@ -1,15 +1,22 @@
 package com.arpc.crypto.order.entity;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
-import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import java.time.Instant;
 import java.util.List;
 
 @Entity(name = "orders")
-public class Order extends PanacheEntity {
+public class Order extends PanacheEntityBase {
+    @Id
+    @GeneratedValue(generator="seqGen")
+    @SequenceGenerator(name = "seqGen", sequenceName = "orders_seq", allocationSize = 5000)
+    public long id;
 
     public String symbol;
     public String location;
